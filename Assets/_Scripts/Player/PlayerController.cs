@@ -18,7 +18,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float runningSpeed = 7f;
     [Range(0, 30f)] 
     [SerializeField] private float jumpForce = 10f;
-    [SerializeField] private float hurtForce = 10f;
+    [Range(0, 30f)]
+    [SerializeField] private float hurtForce = 5f;
 
     [Header("Physics and UI")]
     [SerializeField] private LayerMask ground;
@@ -28,7 +29,7 @@ public class PlayerController : MonoBehaviour
     private int cherries = 0;
 
     //FSM variables
-    private enum State { idle, running, jumping, falling };
+    private enum State { idle, running, jumping, falling , hurt};
     private State state = State.idle;
 
     // Start is called before the first frame update
@@ -43,7 +44,9 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        InputManager();
+        if(state != State.hurt){
+            InputManager();
+        }
         stateSwitch(); //Calling the state machine
         ani.SetInteger("state", (int)state); //Setting the animation according to the state
     }
@@ -104,12 +107,17 @@ public class PlayerController : MonoBehaviour
     private void stateSwitch()
     {
         if(state == State.jumping){
-            if(rb.velocity.y < 1f){
+            if(rb.velocity.y < 0.1f){
                 state = State.falling;
             }
         } 
         else if(state == State.falling){
             if(coll.IsTouchingLayers(ground)){
+                state = State.idle;
+            }
+        }
+        else if(state == State.hurt){
+            if(Mathf.Abs(rb.velocity.x) < 0.1f){
                 state = State.idle;
             }
         }
@@ -138,8 +146,10 @@ public class PlayerController : MonoBehaviour
                 Destroy(other.gameObject);
             else{
                 if(other.gameObject.transform.position.x > transform.position.x){ //ennemy to player's right
+                    state = State.hurt;
                     rb.velocity = new Vector2(-hurtForce, rb.velocity.y);
                 }else { //ennemy to the left
+                    state = State.hurt;
                     rb.velocity = new Vector2(hurtForce, rb.velocity.y);
                 }
             }
