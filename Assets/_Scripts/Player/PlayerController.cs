@@ -11,16 +11,31 @@ public class PlayerController : MonoBehaviour
     private Collider2D coll;
   
     //Inspector variables
+    [Header("Player parameters")]
+    [Range(0, 30f)]
     [SerializeField] private float speed = 5f;
-    [SerializeField] private float runningSpeed = 7f; 
+    [Range(0, 30f)]
+    [SerializeField] private float runningSpeed = 7f;
+    [Range(0, 30f)] 
     [SerializeField] private float jumpForce = 10f;
-    [SerializeField] private LayerMask ground;
-    [SerializeField] private int cherries = 0;
-    [SerializeField] private Text CoinsNumber;
+    [Range(0, 30f)]
+    [SerializeField] private float hurtForce = 5f;
 
-    //FSM
-    private enum State { idle, running, jumping, falling };
+    [Header("Physics and UI")]
+    [SerializeField] private LayerMask ground;
+    [SerializeField] private Text CoinsNumberBox;
+
+    //Scoring
+    private int cherries = 0;
+
+    //FSM variables
+    private enum State { idle, running, jumping, falling , hurt};
     private State state = State.idle;
+
+
+
+
+
 
     // Start is called before the first frame update
     private void Start()
@@ -28,25 +43,23 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         ani = GetComponent<Animator>();
         coll = GetComponent<Collider2D>();
-        CoinsNumber.text = cherries.ToString();
+        CoinsNumberBox.text = cherries.ToString();
     }
 
     // Update is called once per frame
     private void Update()
     {
-        InputManager();
-
+        if(state != State.hurt){
+            InputManager();
+        }
         stateSwitch(); //Calling the state machine
         ani.SetInteger("state", (int)state); //Setting the animation according to the state
     }
+    
 
-    private void OnTriggerEnter2D(Collider2D collision) {
-        if(collision.tag == "Coins"){
-            Destroy(collision.gameObject);
-            cherries ++;
-            CoinsNumber.text = cherries.ToString();
-        }
-    }
+
+
+    //Controls
     private void InputManager()
     {
         float hDirection = Input.GetAxis("Horizontal");
@@ -98,27 +111,79 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void jump(){
+        rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+        state = State.jumping;
+    }
+
+
     //State machine
     private void stateSwitch()
     {
-        if(state == State.jumping){
-            if(rb.velocity.y < 1f){
+        if(state == State.jumping){ //Jump
+            if(rb.velocity.y < 0.1f){
                 state = State.falling;
             }
         } 
-        else if(state == State.falling){
+        else if(state == State.falling){ //Fall after jump
             if(coll.IsTouchingLayers(ground)){
                 state = State.idle;
             }
         }
-        else if (Mathf.Abs(rb.velocity.x) > 2f){
-            state = State.running;
+        else if (state == State.hurt)
+        { //Hurt
+            if (Mathf.Abs(rb.velocity.x) < 0.1f)
+            {
+                state = State.idle;
+            }
         }
-        else{
-            state = State.idle;
+        else if (Mathf.Abs(rb.velocity.x) > 2f) //Running
+        { 
+            if(!coll.IsTouchingLayers(ground))
+                state = State.falling;
+            else
+                state = State.running;
+        }
+        else{//Back to idle
+            if (!coll.IsTouchingLayers(ground))
+                state = State.falling;
+            else
+                state = State.idle;
         }
     }
 
+
+
+
+
+    //Collision and triggers
+    private void OnTriggerEnter2D(Collider2D collision)
+    { //Automatically called when a collision occur
+        if (collision.tag == "Coins")
+        {
+            Destroy(collision.gameObject);
+            cherries++;
+            CoinsNumberBox.text = cherries.ToString();
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D other) {
+        if(other.gameObject.tag == "Ennemies"){
+            if(state == State.falling){
+                Destroy(other.gameObject);
+                jump();
+            }                
+            else{
+                if(other.gameObject.transform.position.x > transform.position.x){ //ennemy to player's right
+                    state = State.hurt;
+                    rb.velocity = new Vector2(-hurtForce, rb.velocity.y);
+                }else { //ennemy to the left
+                    state = State.hurt;
+                    rb.velocity = new Vector2(hurtForce, rb.velocity.y);
+                }
+            }
+        }
+    }
 
 }
     
