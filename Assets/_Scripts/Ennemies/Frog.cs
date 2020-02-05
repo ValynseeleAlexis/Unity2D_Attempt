@@ -55,7 +55,6 @@ public class Frog : MonoBehaviour
         {
             if (transform.position.x > leftCap && !isIdling)
             {
-                StopAllCoroutines();
                 if (coll.IsTouchingLayers(ground))
                 {
                     jumpLeft();
@@ -72,7 +71,6 @@ public class Frog : MonoBehaviour
         {
             if (transform.position.x < rightCap && !isIdling)
             {
-                StopAllCoroutines();
                 if (coll.IsTouchingLayers(ground))
                 {
                     jumpRight();
@@ -89,9 +87,7 @@ public class Frog : MonoBehaviour
 
     private void invertSprite()
     {
-        float x = this.transform.localScale.x; 
-        x *= -1; //Don't know why it doesn't work without this ????
-        transform.localScale = new Vector3(x, this.transform.localScale.y, this.transform.localScale.z);
+        transform.localScale = new Vector3((this.transform.localScale.x*-1), this.transform.localScale.y, this.transform.localScale.z);
     }
     private void jumpLeft()
     {
@@ -108,9 +104,9 @@ public class Frog : MonoBehaviour
     {
         //yield on a new YieldInstruction that waits for 5 seconds.
         yield return new WaitForSeconds(waitTime);
-        invertSprite();
         isIdling = false;
-        
+        invertSprite();
+        StopAllCoroutines();  
     }
 
     //State machine
