@@ -23,6 +23,7 @@ public class Frog : MonoBehaviour
     private bool isFacingLeft = true;
     private bool isIdling = false;
 
+
     //FSM variables
     private enum State { idle,jumping,falling};
     private State state = State.idle;
@@ -88,7 +89,9 @@ public class Frog : MonoBehaviour
 
     private void invertSprite()
     {
-        transform.localScale = new Vector3(-this.transform.localScale.x, this.transform.localScale.y, this.transform.localScale.z);
+        float x = this.transform.localScale.x; 
+        x *= -1; //Don't know why it doesn't work without this ????
+        transform.localScale = new Vector3(x, this.transform.localScale.y, this.transform.localScale.z);
     }
     private void jumpLeft()
     {
