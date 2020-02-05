@@ -19,9 +19,13 @@ public class Frog : MonoBehaviour
     [SerializeField] private float jumpHeight = 10;
     [Range(0, 30f)]
     [SerializeField] private float waitTime = 5f;
+    [Range(0, 30f)]
+    [SerializeField] private float waitTimeBetweenJumps = 2f;
     [SerializeField] private LayerMask ground;
     private bool isFacingLeft = true;
     private bool isIdling = false;
+    private bool waypoint = false;
+    private bool waitBetweenJump = false;
 
 
     //FSM variables
@@ -53,34 +57,41 @@ public class Frog : MonoBehaviour
     {
         if (isFacingLeft)
         {
-            if (transform.position.x > leftCap && !isIdling)
+            if (transform.position.x > leftCap)
             {
                 if (coll.IsTouchingLayers(ground))
                 {
-                    jumpLeft();
+                    if(!waitBetweenJump){
+                        jumpLeft();
+                        waitBetweenJump = true;
+                        StartCoroutine(WaitBetweenJump());
+                    }
                 }
             }
-            else
+            else //Reached left Waypoint
             {
                 isFacingLeft = false;
-                isIdling = true;
-                StartCoroutine(wait());
+                waypoint = true;
             }
         }
         else
         {
-            if (transform.position.x < rightCap && !isIdling)
+            if (transform.position.x < rightCap)
             {
                 if (coll.IsTouchingLayers(ground))
                 {
-                    jumpRight();
+                    if (!waitBetweenJump)
+                    {
+                        jumpRight();
+                        waitBetweenJump = true;
+                        StartCoroutine(WaitBetweenJump());
+                    }
                 }
             }
-            else
+            else //Reached right Waypoint
             {
                 isFacingLeft = true;
-                isIdling = true;
-                StartCoroutine(wait());
+                waypoint = true;
             }
         }
     }
@@ -107,6 +118,18 @@ public class Frog : MonoBehaviour
         isIdling = false;
         invertSprite();
         StopAllCoroutines();  
+    }
+
+    IEnumerator WaitBetweenJump()
+    {
+        //yield on a new YieldInstruction that waits for 5 seconds.
+        yield return new WaitForSeconds(waitTimeBetweenJumps);
+        waitBetweenJump = false;
+        if(waypoint){
+            invertSprite();
+            waypoint = false;
+        }
+        StopAllCoroutines();
     }
 
     //State machine
