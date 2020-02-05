@@ -32,6 +32,11 @@ public class PlayerController : MonoBehaviour
     private enum State { idle, running, jumping, falling , hurt};
     private State state = State.idle;
 
+
+
+
+
+
     // Start is called before the first frame update
     private void Start()
     {
@@ -51,6 +56,9 @@ public class PlayerController : MonoBehaviour
         ani.SetInteger("state", (int)state); //Setting the animation according to the state
     }
     
+
+
+
     //Controls
     private void InputManager()
     {
@@ -103,31 +111,52 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void jump(){
+        rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+        state = State.jumping;
+    }
+
+
+
+
     //State machine
     private void stateSwitch()
     {
-        if(state == State.jumping){
+        if(state == State.jumping){ //Jump
             if(rb.velocity.y < 0.1f){
                 state = State.falling;
             }
         } 
-        else if(state == State.falling){
+        else if(state == State.falling){ //Fall after jump
             if(coll.IsTouchingLayers(ground)){
                 state = State.idle;
             }
         }
-        else if(state == State.hurt){
-            if(Mathf.Abs(rb.velocity.x) < 0.1f){
+        else if (state == State.hurt)
+        { //Hurt
+            if (Mathf.Abs(rb.velocity.x) < 0.1f)
+            {
                 state = State.idle;
             }
         }
-        else if (Mathf.Abs(rb.velocity.x) > 2f){
-            state = State.running;
+        else if (Mathf.Abs(rb.velocity.x) > 2f) //Running
+        { 
+            if(!coll.IsTouchingLayers(ground))
+                state = State.falling;
+            else
+                state = State.running;
         }
-        else{
-            state = State.idle;
+        else{//Back to idle
+            if (!coll.IsTouchingLayers(ground))
+                state = State.falling;
+            else
+                state = State.idle;
         }
     }
+
+
+
+
 
     //Collision and triggers
     private void OnTriggerEnter2D(Collider2D collision)
@@ -142,8 +171,10 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D other) {
         if(other.gameObject.tag == "Ennemies"){
-            if(state == State.falling)
+            if(state == State.falling){
                 Destroy(other.gameObject);
+                jump();
+            }                
             else{
                 if(other.gameObject.transform.position.x > transform.position.x){ //ennemy to player's right
                     state = State.hurt;
