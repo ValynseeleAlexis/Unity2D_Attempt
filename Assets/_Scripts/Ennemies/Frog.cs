@@ -54,6 +54,7 @@ public class Frog : MonoBehaviour
         {
             if (transform.position.x > leftCap && !isIdling)
             {
+                StopAllCoroutines();
                 if (coll.IsTouchingLayers(ground))
                 {
                     jumpLeft();
@@ -70,6 +71,7 @@ public class Frog : MonoBehaviour
         {
             if (transform.position.x < rightCap && !isIdling)
             {
+                StopAllCoroutines();
                 if (coll.IsTouchingLayers(ground))
                 {
                     jumpRight();
@@ -83,15 +85,18 @@ public class Frog : MonoBehaviour
             }
         }
     }
+
+    private void invertSprite()
+    {
+        transform.localScale = new Vector3(-this.transform.localScale.x, this.transform.localScale.y, this.transform.localScale.z);
+    }
     private void jumpLeft()
     {
-        transform.localScale = new Vector3(1, 1, 1);
         rb.velocity = new Vector2(-jumpLength, jumpHeight);
         state = State.jumping;
     }
     private void jumpRight()
     {
-        transform.localScale = new Vector3(-1, 1, 1);
         rb.velocity = new Vector2(jumpLength, jumpHeight);
         state = State.jumping;
     }
@@ -100,7 +105,9 @@ public class Frog : MonoBehaviour
     {
         //yield on a new YieldInstruction that waits for 5 seconds.
         yield return new WaitForSeconds(waitTime);
+        invertSprite();
         isIdling = false;
+        
     }
 
     //State machine
