@@ -11,14 +11,23 @@ public class PlayerController : MonoBehaviour
     private Collider2D coll;
   
     //Inspector variables
+    [Header("Player parameters")]
+    [Range(0, 30f)]
     [SerializeField] private float speed = 5f;
-    [SerializeField] private float runningSpeed = 7f; 
+    [Range(0, 30f)]
+    [SerializeField] private float runningSpeed = 7f;
+    [Range(0, 30f)] 
     [SerializeField] private float jumpForce = 10f;
-    [SerializeField] private LayerMask ground;
-    [SerializeField] private int cherries = 0;
-    [SerializeField] private Text CoinsNumber;
+    [SerializeField] private float hurtForce = 10f;
 
-    //FSM
+    [Header("Physics and UI")]
+    [SerializeField] private LayerMask ground;
+    [SerializeField] private Text CoinsNumberBox;
+
+    //Scoring
+    private int cherries = 0;
+
+    //FSM variables
     private enum State { idle, running, jumping, falling };
     private State state = State.idle;
 
@@ -28,25 +37,18 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         ani = GetComponent<Animator>();
         coll = GetComponent<Collider2D>();
-        CoinsNumber.text = cherries.ToString();
+        CoinsNumberBox.text = cherries.ToString();
     }
 
     // Update is called once per frame
     private void Update()
     {
         InputManager();
-
         stateSwitch(); //Calling the state machine
         ani.SetInteger("state", (int)state); //Setting the animation according to the state
     }
-
-    private void OnTriggerEnter2D(Collider2D collision) {
-        if(collision.tag == "Coins"){
-            Destroy(collision.gameObject);
-            cherries ++;
-            CoinsNumber.text = cherries.ToString();
-        }
-    }
+    
+    //Controls
     private void InputManager()
     {
         float hDirection = Input.GetAxis("Horizontal");
@@ -119,6 +121,30 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    //Collision and triggers
+    private void OnTriggerEnter2D(Collider2D collision)
+    { //Automatically called when a collision occur
+        if (collision.tag == "Coins")
+        {
+            Destroy(collision.gameObject);
+            cherries++;
+            CoinsNumberBox.text = cherries.ToString();
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D other) {
+        if(other.gameObject.tag == "Ennemies"){
+            if(state == State.falling)
+                Destroy(other.gameObject);
+            else{
+                if(other.gameObject.transform.position.x > transform.position.x){ //ennemy to player's right
+                    rb.velocity = new Vector2(-hurtForce, rb.velocity.y);
+                }else { //ennemy to the left
+                    rb.velocity = new Vector2(hurtForce, rb.velocity.y);
+                }
+            }
+        }
+    }
 
 }
     
