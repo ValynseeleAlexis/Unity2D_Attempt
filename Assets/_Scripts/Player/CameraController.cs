@@ -8,7 +8,7 @@ public class CameraController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        transform.position = new Vector3(player.position.x, player.position.y, -15);
     }
 
     // Update is called once per frame
