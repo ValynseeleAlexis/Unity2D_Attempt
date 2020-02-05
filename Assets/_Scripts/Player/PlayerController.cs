@@ -117,8 +117,6 @@ public class PlayerController : MonoBehaviour
     }
 
 
-
-
     //State machine
     private void stateSwitch()
     {
