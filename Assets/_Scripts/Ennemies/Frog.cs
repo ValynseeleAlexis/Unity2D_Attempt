@@ -18,8 +18,6 @@ public class Frog : MonoBehaviour
     [Range(0, 30f)]
     [SerializeField] private float jumpHeight = 10;
     [Range(0, 30f)]
-    [SerializeField] private float waitTime = 5f;
-    [Range(0, 30f)]
     [SerializeField] private float waitTimeBetweenJumps = 2f;
     [SerializeField] private LayerMask ground;
     private bool isFacingLeft = true;
@@ -111,18 +109,8 @@ public class Frog : MonoBehaviour
         state = State.jumping;
     }
 
-    IEnumerator wait()
-    {
-        //yield on a new YieldInstruction that waits for 5 seconds.
-        yield return new WaitForSeconds(waitTime);
-        isIdling = false;
-        invertSprite();
-        StopAllCoroutines();  
-    }
-
     IEnumerator WaitBetweenJump()
     {
-        //yield on a new YieldInstruction that waits for 5 seconds.
         yield return new WaitForSeconds(waitTimeBetweenJumps);
         waitBetweenJump = false;
         if(waypoint){
