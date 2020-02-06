@@ -24,8 +24,9 @@ public class PlayerController : MonoBehaviour
     [Header("Physics and UI")]
     [SerializeField] public LayerMask ground;
     [SerializeField] public LayerMask walls;
+    [SerializeField] public LayerMask death;
     [SerializeField] public Text CoinsNumberBox;
-
+                
     //Scoring
     private int cherries = 0;
 
@@ -34,11 +35,17 @@ public class PlayerController : MonoBehaviour
     private State state = State.idle;
 
     //Health
-    [Header("Health")]
+    [Header("Health System")]
     [SerializeField] public Slider healthSlider;
+    [SerializeField] public Image deathScreen;
+    
+    [Range(0, 30f)]
     [SerializeField] private float healthValue = 10f;
-    [SerializeField] public float hurtDamagevalue;
-    [SerializeField] public Text deathScreen;
+    [Range(0, 30f)]
+    [SerializeField] private float hurtDamagevalue = 1f;
+    [SerializeField] private bool coinsHealing = true;
+    [Range(0, 30f)]
+    [SerializeField] private float coinsHealingValue = 1f;
     private float maxHealth;
 
 
@@ -134,6 +141,9 @@ public class PlayerController : MonoBehaviour
     }
 
 
+
+
+
     //State machine
     private void stateSwitch()
     {
@@ -176,8 +186,6 @@ public class PlayerController : MonoBehaviour
 
 
 
-
-
     //Collision and triggers
     private void OnTriggerEnter2D(Collider2D collision)
     { //Automatically called when a collision occur
@@ -185,7 +193,8 @@ public class PlayerController : MonoBehaviour
         {
             Destroy(collision.gameObject);
             cherries++;
-            healthValue += 1f;
+            if(coinsHealing)
+                healthValue += coinsHealingValue;
             CoinsNumberBox.text = cherries.ToString();
         }
     }
@@ -216,13 +225,19 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    //Health and Death 
     private void healthSystem()
     {
         healthSlider.value = healthValue / maxHealth;
-        if (healthValue <= 0)
+
+        //Death
+        if (healthValue <= 0 || coll.IsTouchingLayers(death))
         {
             Destroy(this.gameObject);
-            deathScreen.text = "T'ES NULL";
+            deathScreen.enabled = true;
+        }
+        if (healthValue > maxHealth){
+            healthValue = maxHealth;
         }
     }
 
