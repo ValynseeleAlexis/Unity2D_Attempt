@@ -32,8 +32,13 @@ public class PlayerController : MonoBehaviour
     private enum State { idle, running, jumping, falling , hurt};
     private State state = State.idle;
 
-
-
+    //Health
+    [Header("Health")]
+    [SerializeField] private Slider healthSlider;
+    [SerializeField] private float healthValue = 10f;
+    [SerializeField] private float hurtDamagevalue;
+    [SerializeField] private Text deathScreen;
+    private float maxHealth;
 
 
 
@@ -44,6 +49,7 @@ public class PlayerController : MonoBehaviour
         ani = GetComponent<Animator>();
         coll = GetComponent<Collider2D>();
         CoinsNumberBox.text = cherries.ToString();
+        maxHealth = healthValue;
     }
 
     // Update is called once per frame
@@ -54,6 +60,7 @@ public class PlayerController : MonoBehaviour
         }
         stateSwitch(); //Calling the state machine
         ani.SetInteger("state", (int)state); //Setting the animation according to the state
+        healthSystem();            
     }
     
 
@@ -163,6 +170,7 @@ public class PlayerController : MonoBehaviour
         {
             Destroy(collision.gameObject);
             cherries++;
+            healthValue += 1f;
             CoinsNumberBox.text = cherries.ToString();
         }
     }
@@ -174,6 +182,7 @@ public class PlayerController : MonoBehaviour
                 jump();
             }                
             else{
+                    healthValue -= hurtDamagevalue; //Update Health
                 if(other.gameObject.transform.position.x > transform.position.x){ //ennemy to player's right
                     state = State.hurt;
                     rb.velocity = new Vector2(-hurtForce, rb.velocity.y);
@@ -182,6 +191,15 @@ public class PlayerController : MonoBehaviour
                     rb.velocity = new Vector2(hurtForce, rb.velocity.y);
                 }
             }
+        }
+    }
+
+    private void healthSystem(){
+        healthSlider.value = healthValue / maxHealth;
+        if (healthValue <= 0)
+        {
+            Destroy(this.gameObject);
+            deathScreen.text = "T'ES NULL";
         }
     }
 
