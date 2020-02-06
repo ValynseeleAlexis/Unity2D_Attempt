@@ -22,8 +22,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float hurtForce = 5f;
 
     [Header("Physics and UI")]
-    [SerializeField] private LayerMask ground;
-    [SerializeField] private Text CoinsNumberBox;
+    [SerializeField] public LayerMask ground;
+    [SerializeField] public Text CoinsNumberBox;
 
     //Scoring
     private int cherries = 0;
@@ -34,10 +34,10 @@ public class PlayerController : MonoBehaviour
 
     //Health
     [Header("Health")]
-    [SerializeField] private Slider healthSlider;
+    [SerializeField] public Slider healthSlider;
     [SerializeField] private float healthValue = 10f;
-    [SerializeField] private float hurtDamagevalue;
-    [SerializeField] private Text deathScreen;
+    [SerializeField] public float hurtDamagevalue;
+    [SerializeField] public Text deathScreen;
     private float maxHealth;
 
 

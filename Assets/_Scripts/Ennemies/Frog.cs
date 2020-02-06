@@ -19,9 +19,8 @@ public class Frog : MonoBehaviour
     [SerializeField] private float jumpHeight = 10;
     [Range(0, 30f)]
     [SerializeField] private float waitTimeBetweenJumps = 2f;
-    [SerializeField] private LayerMask ground;
+    [SerializeField] public LayerMask ground;
     private bool isFacingLeft = true;
-    private bool isIdling = false;
     private bool waypoint = false;
     private bool waitBetweenJump = false;
 
