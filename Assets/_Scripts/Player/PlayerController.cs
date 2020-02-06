@@ -9,27 +9,28 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rb;
     private Animator ani;
     private Collider2D coll;
-  
+
     //Inspector variables
     [Header("Player parameters")]
     [Range(0, 30f)]
     [SerializeField] private float speed = 5f;
     [Range(0, 30f)]
     [SerializeField] private float runningSpeed = 7f;
-    [Range(0, 30f)] 
+    [Range(0, 30f)]
     [SerializeField] private float jumpForce = 10f;
     [Range(0, 30f)]
     [SerializeField] private float hurtForce = 5f;
 
     [Header("Physics and UI")]
     [SerializeField] public LayerMask ground;
+    [SerializeField] public LayerMask walls;
     [SerializeField] public Text CoinsNumberBox;
 
     //Scoring
     private int cherries = 0;
 
     //FSM variables
-    private enum State { idle, running, jumping, falling , hurt};
+    private enum State { idle, running, jumping, falling, hurt };
     private State state = State.idle;
 
     //Health
@@ -55,14 +56,16 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        if(state != State.hurt){
+        if (state != State.hurt)
+        {
             InputManager();
         }
+        fallingAgainstWall();
         stateSwitch(); //Calling the state machine
         ani.SetInteger("state", (int)state); //Setting the animation according to the state
-        healthSystem();            
+        healthSystem();
     }
-    
+
 
 
 
@@ -111,29 +114,40 @@ public class PlayerController : MonoBehaviour
         }
 
         //Jump mechanism 
-        if (Input.GetButtonDown("Jump") && coll.IsTouchingLayers(ground))
+        if (Input.GetButtonDown("Jump") && coll.IsTouchingLayers(ground) && !coll.IsTouchingLayers(walls))
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             state = State.jumping;
         }
     }
 
-    private void jump(){
+    private void jump()
+    {
         rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         state = State.jumping;
+    }
+
+    private void fallingAgainstWall(){
+        if(coll.IsTouchingLayers(walls)){
+            rb.velocity = new Vector2(0,rb.velocity.y);
+        }
     }
 
 
     //State machine
     private void stateSwitch()
     {
-        if(state == State.jumping){ //Jump
-            if(rb.velocity.y < 0.1f){
+        if (state == State.jumping)
+        { //Jump
+            if (rb.velocity.y < 0.1f)
+            {
                 state = State.falling;
             }
-        } 
-        else if(state == State.falling){ //Fall after jump
-            if(coll.IsTouchingLayers(ground)){
+        }
+        else if (state == State.falling)
+        { //Fall after jump
+            if (coll.IsTouchingLayers(ground))
+            {
                 state = State.idle;
             }
         }
@@ -145,13 +159,14 @@ public class PlayerController : MonoBehaviour
             }
         }
         else if (Mathf.Abs(rb.velocity.x) > 2f) //Running
-        { 
-            if(!coll.IsTouchingLayers(ground))
+        {
+            if (!coll.IsTouchingLayers(ground))
                 state = State.falling;
             else
                 state = State.running;
         }
-        else{//Back to idle
+        else
+        {//Back to idle
             if (!coll.IsTouchingLayers(ground))
                 state = State.falling;
             else
@@ -175,18 +190,25 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void OnCollisionEnter2D(Collision2D other) {
-        if(other.gameObject.tag == "Ennemies"){
-            if(state == State.falling){
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        if (other.gameObject.tag == "Ennemies")
+        {
+            if (state == State.falling)
+            {
                 Destroy(other.gameObject);
                 jump();
-            }                
-            else{
-                    healthValue -= hurtDamagevalue; //Update Health
-                if(other.gameObject.transform.position.x > transform.position.x){ //ennemy to player's right
+            }
+            else
+            {
+                healthValue -= hurtDamagevalue; //Update Health
+                if (other.gameObject.transform.position.x > transform.position.x)
+                { //ennemy to player's right
                     state = State.hurt;
                     rb.velocity = new Vector2(-hurtForce, rb.velocity.y);
-                }else { //ennemy to the left
+                }
+                else
+                { //ennemy to the left
                     state = State.hurt;
                     rb.velocity = new Vector2(hurtForce, rb.velocity.y);
                 }
@@ -194,7 +216,8 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void healthSystem(){
+    private void healthSystem()
+    {
         healthSlider.value = healthValue / maxHealth;
         if (healthValue <= 0)
         {
@@ -204,4 +227,3 @@ public class PlayerController : MonoBehaviour
     }
 
 }
-    
