@@ -9,31 +9,44 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rb;
     private Animator ani;
     private Collider2D coll;
-  
+
     //Inspector variables
     [Header("Player parameters")]
     [Range(0, 30f)]
     [SerializeField] private float speed = 5f;
     [Range(0, 30f)]
     [SerializeField] private float runningSpeed = 7f;
-    [Range(0, 30f)] 
+    [Range(0, 30f)]
     [SerializeField] private float jumpForce = 10f;
     [Range(0, 30f)]
     [SerializeField] private float hurtForce = 5f;
 
     [Header("Physics and UI")]
-    [SerializeField] private LayerMask ground;
-    [SerializeField] private Text CoinsNumberBox;
-
+    [SerializeField] public LayerMask ground;
+    [SerializeField] public LayerMask walls;
+    [SerializeField] public LayerMask death;
+    [SerializeField] public Text CoinsNumberBox;
+                
     //Scoring
     private int cherries = 0;
 
     //FSM variables
-    private enum State { idle, running, jumping, falling , hurt};
+    private enum State { idle, running, jumping, falling, hurt };
     private State state = State.idle;
 
-
-
+    //Health
+    [Header("Health System")]
+    [SerializeField] public Slider healthSlider;
+    [SerializeField] public Image deathScreen;
+    
+    [Range(0, 30f)]
+    [SerializeField] private float healthValue = 10f;
+    [Range(0, 30f)]
+    [SerializeField] private float hurtDamagevalue = 1f;
+    [SerializeField] private bool coinsHealing = true;
+    [Range(0, 30f)]
+    [SerializeField] private float coinsHealingValue = 1f;
+    private float maxHealth;
 
 
 
@@ -44,18 +57,22 @@ public class PlayerController : MonoBehaviour
         ani = GetComponent<Animator>();
         coll = GetComponent<Collider2D>();
         CoinsNumberBox.text = cherries.ToString();
+        maxHealth = healthValue;
     }
 
     // Update is called once per frame
     private void Update()
     {
-        if(state != State.hurt){
+        if (state != State.hurt)
+        {
             InputManager();
         }
+        fallingAgainstWall();
         stateSwitch(); //Calling the state machine
         ani.SetInteger("state", (int)state); //Setting the animation according to the state
+        healthSystem();
     }
-    
+
 
 
 
@@ -104,29 +121,43 @@ public class PlayerController : MonoBehaviour
         }
 
         //Jump mechanism 
-        if (Input.GetButtonDown("Jump") && coll.IsTouchingLayers(ground))
+        if (Input.GetButtonDown("Jump") && coll.IsTouchingLayers(ground) && !coll.IsTouchingLayers(walls))
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             state = State.jumping;
         }
     }
 
-    private void jump(){
+    private void jump()
+    {
         rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         state = State.jumping;
     }
+
+    private void fallingAgainstWall(){
+        if(coll.IsTouchingLayers(walls)){
+            rb.velocity = new Vector2(0,rb.velocity.y);
+        }
+    }
+
+
+
 
 
     //State machine
     private void stateSwitch()
     {
-        if(state == State.jumping){ //Jump
-            if(rb.velocity.y < 0.1f){
+        if (state == State.jumping)
+        { //Jump
+            if (rb.velocity.y < 0.1f)
+            {
                 state = State.falling;
             }
-        } 
-        else if(state == State.falling){ //Fall after jump
-            if(coll.IsTouchingLayers(ground)){
+        }
+        else if (state == State.falling)
+        { //Fall after jump
+            if (coll.IsTouchingLayers(ground))
+            {
                 state = State.idle;
             }
         }
@@ -138,21 +169,20 @@ public class PlayerController : MonoBehaviour
             }
         }
         else if (Mathf.Abs(rb.velocity.x) > 2f) //Running
-        { 
-            if(!coll.IsTouchingLayers(ground))
+        {
+            if (!coll.IsTouchingLayers(ground))
                 state = State.falling;
             else
                 state = State.running;
         }
-        else{//Back to idle
+        else
+        {//Back to idle
             if (!coll.IsTouchingLayers(ground))
                 state = State.falling;
             else
                 state = State.idle;
         }
     }
-
-
 
 
 
@@ -163,21 +193,31 @@ public class PlayerController : MonoBehaviour
         {
             Destroy(collision.gameObject);
             cherries++;
+            if(coinsHealing)
+                healthValue += coinsHealingValue;
             CoinsNumberBox.text = cherries.ToString();
         }
     }
 
-    private void OnCollisionEnter2D(Collision2D other) {
-        if(other.gameObject.tag == "Ennemies"){
-            if(state == State.falling){
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        if (other.gameObject.tag == "Ennemies")
+        {
+            if (state == State.falling)
+            {
                 Destroy(other.gameObject);
                 jump();
-            }                
-            else{
-                if(other.gameObject.transform.position.x > transform.position.x){ //ennemy to player's right
+            }
+            else
+            {
+                healthValue -= hurtDamagevalue; //Update Health
+                if (other.gameObject.transform.position.x > transform.position.x)
+                { //ennemy to player's right
                     state = State.hurt;
                     rb.velocity = new Vector2(-hurtForce, rb.velocity.y);
-                }else { //ennemy to the left
+                }
+                else
+                { //ennemy to the left
                     state = State.hurt;
                     rb.velocity = new Vector2(hurtForce, rb.velocity.y);
                 }
@@ -185,5 +225,20 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    //Health and Death 
+    private void healthSystem()
+    {
+        healthSlider.value = healthValue / maxHealth;
+
+        //Death
+        if (healthValue <= 0 || coll.IsTouchingLayers(death))
+        {
+            Destroy(this.gameObject);
+            deathScreen.enabled = true;
+        }
+        if (healthValue > maxHealth){
+            healthValue = maxHealth;
+        }
+    }
+
 }
-    
