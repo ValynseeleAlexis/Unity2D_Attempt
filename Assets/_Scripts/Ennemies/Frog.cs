@@ -141,5 +141,13 @@ public class Frog : MonoBehaviour
                 state = State.idle;
         }
     }
- 
+
+    public void Deathanimation()
+    {
+        ani.SetTrigger("Death");     
+    }
+    private void Death(){
+        Destroy(this.gameObject);
+    }
+
 }

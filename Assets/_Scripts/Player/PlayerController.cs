@@ -47,6 +47,7 @@ public class PlayerController : MonoBehaviour
     [Range(0, 30f)]
     [SerializeField] private float coinsHealingValue = 1f;
     private float maxHealth;
+    private bool dead = false;
 
 
 
@@ -63,17 +64,22 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        if (state != State.hurt)
+        if (state != State.hurt && !dead)
         {
             InputManager();
         }
-        fallingAgainstWall();
-        stateSwitch(); //Calling the state machine
-        ani.SetInteger("state", (int)state); //Setting the animation according to the state
-        healthSystem();
+        
+        if(!dead){
+            stateSwitch(); //Calling the state machine
+            ani.SetInteger("state", (int)state); //Setting the animation according to the state
+            fallingAgainstWall();
+            healthSystem();
+            deathSystem();
+        }
+        if(dead){
+            Deathanimation();
+        }
     }
-
-
 
 
     //Controls
@@ -203,9 +209,11 @@ public class PlayerController : MonoBehaviour
     {
         if (other.gameObject.tag == "Ennemies")
         {
+            Frog frog = other.gameObject.GetComponent<Frog>(); //We get the frog object(intialised by Frog script) attached to the ennemy we bumped into  
+            
             if (state == State.falling)
             {
-                Destroy(other.gameObject);
+                frog.Deathanimation();
                 jump();
             }
             else
@@ -230,15 +238,27 @@ public class PlayerController : MonoBehaviour
     {
         healthSlider.value = healthValue / maxHealth;
 
-        //Death
-        if (healthValue <= 0 || coll.IsTouchingLayers(death))
-        {
-            Destroy(this.gameObject);
-            deathScreen.enabled = true;
-        }
+       
         if (healthValue > maxHealth){
             healthValue = maxHealth;
         }
+    }
+
+    private void deathSystem(){
+        //Death
+        if (healthValue <= 0 || coll.IsTouchingLayers(death))
+        {
+            dead = true;
+        }
+    }
+    private void Deathanimation()
+    {
+        ani.SetBool("Death",true);
+    }
+    private void Death()
+    {
+        Destroy(this.gameObject);
+        deathScreen.enabled = true;
     }
 
 }
